@@ -109,5 +109,5 @@ class Backtester:
         print(f"Max Drawdown    : {max_drawdown:.2f} %")
         print(f"Ratio de Sharpe : {sharpe_ratio:.2f}")
         
-        return equity_curve, z_score
+        return equity_curve, z_score, global_returns
 
