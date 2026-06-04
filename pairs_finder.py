@@ -23,7 +23,8 @@ class PairsFinder :
 
         return df_final[ticker1], df_final[ticker2]
     
-    def test_cointegration(self, series1, series2):
+    @staticmethod
+    def test_cointegration(series1, series2):
         res = coint(series1, series2)
         return res[1]
     
