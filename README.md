@@ -4,7 +4,7 @@ Un moteur de trading quantitatif de bout en bout implémentant une stratégie d'
 
 ---
 
-## 📊 Performances de la Stratégie (2021 - 2026)
+## Performances de la Stratégie (2021 - 2026)
 
 L'algorithme a été testé sur la période du **1er janvier 2021 au 1er juin 2026** sur la paire d'actifs jumeaux **GOOG / GOOGL** (Alphabet).
 
@@ -14,7 +14,7 @@ L'algorithme a été testé sur la période du **1er janvier 2021 au 1er juin 20
 
 ---
 
-## 🛠️ Architecture du Projet
+## Architecture du Projet
 
 Le projet respecte les principes de la Programmation Orientée Objet (POO) et est découpé en 4 modules indépendants (Sprints) :
 
@@ -27,7 +27,7 @@ Le projet respecte les principes de la Programmation Orientée Objet (POO) et es
 
 ---
 
-## 🚀 Installation et Utilisation
+## Installation et Utilisation
 
 ### 1. Cloner le dépôt et configurer l'environnement
 ```bash
