@@ -69,5 +69,5 @@ class Backtester:
         print(f"Capital Final : {final_capital:,.2f} $")
         print(f"Rendement Total : {total_return:.2f} %")
         
-        return equity_curve
+        return equity_curve, z_score
 
