@@ -55,6 +55,12 @@ class DataLoader:
         )
         self.con.commit()
 
+    def save_live_price(self, date, ticker, price):
+        """Insère ou remplace un prix en temps réel."""
+        cursor = self.con.cursor()
+        cursor.execute("INSERT OR REPLACE INTO prices (date, ticker, adj_close) VALUES (?, ?, ?)", (date, ticker, price))
+        self.con.commit()
+
     def fetch_and_save_prices(self, ticker, start_date, end_date):
         """
         Télécharge les prix depuis yfinance et les sauvegarde sans doublons.
