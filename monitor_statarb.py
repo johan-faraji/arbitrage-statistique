@@ -37,13 +37,44 @@ if __name__ == "__main__":
                     current_spread = price_goog - (beta * price_googl)
                     z_score = (current_spread - mean) / std
                     
-                    status = "⚪ NEUTRE"
-                    if z_score >= 2.0:
-                        status = "🚨 VENDRE GOOG / ACHETER GOOGL (Z HIGH)"
-                    elif z_score <= -2.0:
-                        status = "🚨 ACHETER GOOG / VENDRE GOOGL (Z LOW)"
+                    open_position = loader.has_open_position()
+
+                    if open_position is None :
+
+                        status = "⚪ NEUTRE"
+                        if z_score >= 2.5:
+                            status = "🚨 VENDRE GOOG / ACHETER GOOGL (Z HIGH)"
+                            signal_type = "SELL_SPREAD"
+                            loader.open_trade(current_time, signal_type, price_goog, price_googl, beta)
+                        elif z_score <= -2.5:
+                            status = "🚨 ACHETER GOOG / VENDRE GOOGL (Z LOW)"
+                            signal_type = "BUY_SPREAD"
+                            loader.open_trade(current_time, signal_type, price_goog, price_googl, beta)
+                            
+                        print(f"[{current_time}] GOOG: {price_goog:.2f}$ | GOOGL: {price_googl:.2f}$ | Spread: {current_spread:.2f} | Z-Score: {z_score:+.2f} | {status}")
+
+                    else :
                         
-                    print(f"[{current_time}] GOOG: {price_goog:.2f}$ | GOOGL: {price_googl:.2f}$ | Spread: {current_spread:.2f} | Z-Score: {z_score:+.2f} | {status}")
+                        order_id = open_position[0]
+                        signal_type = open_position[3]
+                        entry_goog = open_position[5]
+                        entry_googl = open_position[6]
+
+                        # Calcule le spread d'entrée pour pouvoir calculer le PnL plus tard
+                        entry_spread = entry_goog - (beta * entry_googl)
+
+                        if (signal_type == "BUY_SPREAD" and z_score >= 0) or (signal_type == "SELL_SPREAD" and z_score <= 0):
+                            
+                            print("🎯 SIGNAL EXIT: RETOUR À LA MOYENNE")
+                            exit_spread = price_goog - (beta * price_googl)
+
+                            if signal_type == "BUY_SPREAD" :
+                                pnl = exit_spread - entry_spread
+                            else :
+                                pnl = entry_spread - exit_spread
+
+                                
+                            loader.close_trade(order_id, current_time, price_goog, price_googl, pnl)
             
             time.sleep(1)
             

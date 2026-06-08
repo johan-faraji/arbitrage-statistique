@@ -6,6 +6,7 @@ class DataLoader:
         self.con = sqlite3.connect(db_path)
         # On s'assure que la table existe au cas où
         self.create_tables()
+        self.create_orders_table()
 
     def create_tables(self):
         query = """
@@ -15,6 +16,26 @@ class DataLoader:
             adj_close REAL,
             PRIMARY KEY (date, ticker)
         );
+        """
+
+        self.con.cursor().execute(query)
+        self.con.commit()
+
+    def create_orders_table(self):
+        query = """
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_entry TEXT,
+            date_exit TEXT,
+            signal_type TEXT,
+            status TEXT,
+            entry_goog REAL,
+            entry_googl REAL,
+            exit_goog REAL,
+            exit_googl REAL,
+            beta REAL,
+            pnl REAL
+            )
         """
         self.con.cursor().execute(query)
         self.con.commit()
@@ -98,3 +119,73 @@ class DataLoader:
         except Exception as e:
             print(f"⚠️ Erreur lors du calcul statistique SQL : {e}")
             return 0.0, 1.0
+        
+    def has_open_position(self):
+        query = """
+        SELECT * FROM orders WHERE status = 'OPEN'
+        """
+
+        cursor = self.con.cursor()
+        cursor.execute(query)
+        row = cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return row
+    
+    def open_trade(self, date_entry, signal_type, entry_goog, entry_googl, beta):
+        
+        query = "INSERT INTO orders (date_entry, signal_type, status, entry_goog, entry_googl, beta) VALUES (?, ?, ?, ?, ?, ?)"
+        try:
+            cursor = self.con.cursor()
+            cursor.execute(query, (date_entry, signal_type, 'OPEN', entry_goog, entry_googl, beta))
+            self.con.commit()
+        except Exception as e:
+            print(f"⚠️ Erreur lors de l'insertion SQLite : {e}")
+        
+
+    def close_trade(self, order_id, date_exit, exit_goog, exit_googl, pnl):
+        """
+        Clôture une position existante via son order_id (status='CLOSED').
+        """
+        query = """
+            UPDATE orders SET 
+            status = 'CLOSED',
+            date_exit = ?,
+            exit_goog = ?,
+            exit_googl = ?,
+            pnl = ?
+            WHERE id = ?
+            """
+        try:
+            cursor = self.con.cursor()
+            cursor.execute(query, (date_exit, exit_goog, exit_googl, pnl, order_id))
+            self.con.commit()
+        except Exception as e:
+            print(f"⚠️ Erreur lors de la MAJ de la table SQLite : {e}")
+
+    def get_recent_spreads(self, limit=100):
+        query = """
+                SELECT 
+                    g.date, 
+                    g.adj_close AS price_goog, 
+                    gl.adj_close AS price_googl
+                FROM prices g
+                JOIN prices gl ON g.date = gl.date
+                WHERE g.ticker = 'GOOG' AND gl.ticker = 'GOOGL'
+                AND g.date >= date('now', '-1 day') -- 🛡️ Sécurité : Uniquement les dernières 24h
+                ORDER BY g.date DESC
+                LIMIT ?
+                """
+        cursor = self.con.cursor()
+        cursor.execute(query, (limit,))
+        rows = cursor.fetchall()
+        return rows[::-1]
+    
+    def get_all_orders(self) :
+        query = """SELECT * FROM orders"""
+        cursor = self.con.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return rows
