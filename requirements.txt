@@ -1,0 +1,7 @@
+streamlit
+pandas
+numpy
+websocket-client
+python-dotenv
+yfinance
+statsmodels

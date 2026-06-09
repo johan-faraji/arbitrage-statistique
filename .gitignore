@@ -1,5 +1,18 @@
-venv/
+
 .DS_Store
-__pycache__/
+
+# Environnement virtuel local
+venv/
+.venv/
+env/
+
+# Fichiers de cache Python
+**/__pycache__/
+*.pyc
+
+# Base de données locale (pour éviter de push tes données de test)
 *.db
+*.db-journal
+
+# Variables d'environnement privées (NE JAMAIS PUSH LA CLÉ FINNHUB)
 .env
