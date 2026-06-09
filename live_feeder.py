@@ -25,12 +25,12 @@ def on_message(ws, message):
             price = trade["p"]
             timestamp = trade["t"]
             
-            # Utilisation standard de Pandas pour convertir le timestamp en date lisible
-            date_lisible = pd.to_datetime(timestamp, unit='ms').strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            # 🎯 CORRECTION : On s'arrête aux secondes (%S), on vire les millisecondes
+            date_lisible = pd.to_datetime(timestamp, unit='ms').strftime('%Y-%m-%d %H:%M:%S')
             
             print(f"⚡ Live Trade | {ticker} : {price} $ | {date_lisible}")
             
-            # Sauvegarde en base de données (gère le multi-trade par milliseconde)
+            # Sauvegarde en base de données (SQLite gérera l'écrasement ou l'insertion)
             loader.save_live_price(date_lisible, ticker, price)
 
 def on_error(ws, error):
@@ -45,6 +45,10 @@ def on_open(ws):
     ws.send(f'{{"type":"subscribe","symbol":"GOOGL"}}')
 
 if __name__ == "__main__":
+
+    loader = DataLoader("finance_data.db")
+    loader.reset_orders_table()
+    
     websocket.enableTrace(False)
     ws = websocket.WebSocketApp(
         f"wss://ws.finnhub.io?token={API_KEY}",

@@ -189,3 +189,14 @@ class DataLoader:
         cursor.execute(query)
         rows = cursor.fetchall()
         return rows
+    
+    def reset_orders_table(self):
+        """Vide proprement la table des ordres pour recommencer une session de test à zéro."""
+        query = "DELETE FROM orders;"
+        try:
+            cursor = self.con.cursor()
+            cursor.execute(query)
+            self.con.commit()
+            print("🧼 [DATABASE] Table des ordres vidée avec succès pour la nouvelle session.")
+        except Exception as e:
+            print(f"⚠️ Erreur lors du nettoyage de la table orders : {e}")
