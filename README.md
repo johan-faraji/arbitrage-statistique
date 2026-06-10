@@ -1,10 +1,10 @@
-# Statistical Arbitrage & Pairs Trading Engine
+# Statistical Arbitrage Platform
 
-Un moteur de trading quantitatif de bout en bout implémentant une stratégie d'arbitrage statistique (Pairs Trading) neutre au marché (*Market Neutral*). Le projet intègre l'ingestion automatisée de données, un scanner de cointégration statistique, un simulateur de performance (Backtester) vectorisé, et un module de visualisation graphique.
+Plateforme de trading algorithmique et de backtesting dédiée à l'arbitrage statistique (Mean Reversion) sur la paire de trackers Alphabet (**GOOG / GOOGL**). L'application est containerisée avec Docker et déployée de manière autonome sur Render.
 
 ---
 
-## Performances de la Stratégie (2021 - 2026)
+## Performances historiques de la stratégie (2021 - 2026)
 
 L'algorithme a été testé sur la période du **1er janvier 2021 au 1er juin 2026** sur la paire d'actifs jumeaux **GOOG / GOOGL** (Alphabet).
 
@@ -14,27 +14,32 @@ L'algorithme a été testé sur la période du **1er janvier 2021 au 1er juin 20
 
 ---
 
-## Architecture du Projet
+## Architecture des Données (SQLite)
 
-Le projet respecte les principes de la Programmation Orientée Objet (POO) et est découpé en 4 modules indépendants (Sprints) :
+Pour garantir une étanchéité totale entre l'analyse historique et l'exécution en temps réel, la base de données `finance_data.db` est divisée en deux tables distinctes :
 
-1.  **`data_loader.py` (Ingestion) :** Connexion à l'API `yfinance`, extraction des cours de clôture ajustés (`adj_close`) et stockage persistant dans une base de données relationnelle locale **SQLite**.
-2.  **`pairs_finder.py` (Analyse Statistique) :** Algorithme de scan combinatoire (via `itertools`). Il applique le **test de Dickey-Fuller Augmenté (ADF)** via `statsmodels` pour identifier les paires cointégrées ($p\text{-value} < 0.05$).
-3.  **`backtester.py` (Moteur de Simulation) :** * Calcul vectorisé (sans boucles) du **Z-Score glissant** du spread (fenêtre de 20 jours).
-    * Génération de signaux d'entrée en régime ($\pm2$ écarts-types) et de sortie ($0$) avec un système de mémoire de position pour éviter le biais de anticipation (*look-ahead bias*).
-4.  **`visualizer.py` (Dashboard) :** Génération automatique d'un graphique à deux étages synchronisés avec `matplotlib` (Évolution de l'*Equity Curve* et comportement du Z-Score face aux seuils).
-5.  **`main.py` :** L'orchestrateur central du projet.
+* **`historical_prices` (Backtest) :** Contient 5 ans de données historiques journalières (Daily) de 2021 à 2026. Cette table est embarquée "en dur" dans le conteneur pour s'affranchir des limitations et blocages d'IP de l'API Yahoo Finance sur le Cloud.
+* **`prices` (Trading Live) :** Contient le flux de prix haute fréquence (à la seconde) capté en direct par le WebSocket Finnhub dès que le marché américain (NASDAQ) est ouvert.
 
 ---
 
-## Installation et Utilisation
+## Fonctionnalités principales
 
-### 1. Cloner le dépôt et configurer l'environnement
+1. **Dashboard Quant (Streamlit) :**
+   * **Onglet Live :** Visualisation graphique du spread en temps réel et du Z-Score glissant sur les 100 derniers points reçus.
+   * **Onglet Backtest :** Simulation historique complète sur 5 ans avec calcul dynamique du capital final, du Return (%), du Maximum Drawdown et du Sharpe Ratio.
+2. **Live Feeder (Finnhub) :** Ingestion continue des flux de transactions (ticks) de GOOG et GOOGL via une connexion WebSocket sécurisée.
+3. **Moniteur de Surveillance du Z-Score :** Robot d'exécution asynchrone qui calcule le Z-Score glissant (fenêtre de 20 points) à chaque seconde et enregistre les signaux d'achat (`BUY_SPREAD`), de vente (`SELL_SPREAD`) ou de fermeture (`EXIT`) en base de données.
+
+---
+
+## Installation et Lancement en Local
+
+### 1. Prérequis
+* Python 3.11+
+* Docker (optionnel, pour tester l'environnement de production)
+
+### 2. Installation des dépendances
 ```bash
-git clone [https://github.com/VOTRE_PSEUDO/VOTRE_DEPOT.git](https://github.com/VOTRE_PSEUDO/VOTRE_DEPOT.git)
-cd VOTRE_DEPOT
-
-# Créer et activer l'environnement virtuel
-python3 -m venv venv
-source venv/bin/activate  # Sur Mac/Linux
-# venv\Scripts\activate  # Sur Windows
+pip install -r requirements.txt
+---
