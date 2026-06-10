@@ -1,5 +1,6 @@
 import time
 from data_loader import DataLoader
+import pandas as pd
 
 loader = DataLoader("finance_data.db")
 
