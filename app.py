@@ -31,20 +31,23 @@ with tab_backtest:
             finder = PairsFinder(db_name)
             series_goog, series_googl = finder.charge_prices("GOOG", "GOOGL")
             
-            backtester = Backtester(initial_capital=10000.0)
-            equity, z_score, global_returns = backtester.run(series_goog, series_googl)
-            
-            final_cap = equity.iloc[-1]
-            ret = ((final_cap - 10000.0) / 10000.0) * 100
-            mdd = backtester.calculate_max_drawdown(equity)
-            sharpe = backtester.calculate_sharpe_ratio(global_returns)
-            
-            # Sauvegarde des résultats pour survivre au st.rerun()
-            st.session_state["backtest_calculé"] = True
-            st.session_state["ret"] = ret
-            st.session_state["mdd"] = mdd
-            st.session_state["sharpe"] = sharpe
-            st.session_state["equity"] = equity
+            if series_goog.empty or series_googl.empty:
+                st.error("❌ Impossible de lancer le backtest : l'historique des prix est vide dans la base SQLite de Render. Lance un chargement de données d'abord.")
+            else:
+                backtester = Backtester(initial_capital=10000.0)
+                equity, z_score, global_returns = backtester.run(series_goog, series_googl)
+                
+                final_cap = equity.iloc[-1]
+                ret = ((final_cap - 10000.0) / 10000.0) * 100
+                mdd = backtester.calculate_max_drawdown(equity)
+                sharpe = backtester.calculate_sharpe_ratio(global_returns)
+                
+                # Sauvegarde des résultats pour survivre au st.rerun()
+                st.session_state["backtest_calculé"] = True
+                st.session_state["ret"] = ret
+                st.session_state["mdd"] = mdd
+                st.session_state["sharpe"] = sharpe
+                st.session_state["equity"] = equity
 
     # 2. Si le backtest est en mémoire, on l'affiche (il ne disparaîtra plus !)
     if st.session_state.get("backtest_calculé", False):
