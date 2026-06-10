@@ -9,7 +9,7 @@ class DataLoader:
         self.create_orders_table()
 
     def create_tables(self):
-        query = """
+        query_live = """
         CREATE TABLE IF NOT EXISTS prices (
             date TEXT,
             ticker TEXT,
@@ -18,7 +18,16 @@ class DataLoader:
         );
         """
 
-        self.con.cursor().execute(query)
+        query_hist = """
+        CREATE TABLE IF NOT EXISTS historical_prices (
+            date TEXT,
+            ticker TEXT,
+            adj_close REAL,
+            PRIMARY KEY (date, ticker)
+        );
+        """
+        self.con.cursor().execute(query_live)
+        self.con.cursor().execute(query_hist)
         self.con.commit()
 
     def create_orders_table(self):
@@ -41,14 +50,20 @@ class DataLoader:
         self.con.commit()
 
     def download_historical_data(self, tickers, start_date, end_date):
-        """Télécharge les données historiques et les stocke dans la table prices."""
-        # Lazy Loading obligatoire pour éviter les crashs au démarrage de Docker
+        """Télécharge les données historiques et les stocke UNIQUEMENT dans historical_prices."""
         import yfinance as yf
+        import requests
         
         try:
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            
             for ticker in tickers:
                 print(f"📥 Téléchargement historique pour {ticker}...")
-                data = yf.download(ticker, start=start_date, end=end_date)
+                ticker_obj = yf.Ticker(ticker, session=session)
+                data = ticker_obj.history(start=start_date, end=end_date)
                 
                 if data.empty:
                     print(f"⚠️ Aucun cours trouvé pour {ticker}")
@@ -56,15 +71,12 @@ class DataLoader:
                 
                 cursor = self.con.cursor()
                 for timestamp, row in data.iterrows():
-                    # Format propre 'YYYY-MM-DD' (longueur 10)
                     date_str = timestamp.strftime('%Y-%m-%d')
+                    close_val = float(row['Close'])
                     
-                    # Sécurité : Conversion du float de Pandas (numpy) en float Python pur
-                    adj_close_val = float(row['Adj Close'])
-                    
-                    # Le INSERT OR REPLACE évite les doublons si tu cliques plusieurs fois sur le bouton
-                    query = "INSERT OR REPLACE INTO prices (date, ticker, adj_close) VALUES (?, ?, ?)"
-                    cursor.execute(query, (date_str, ticker, adj_close_val))
+                    # 🎯 ON INSÈRE DANS HISTORICAL_PRICES
+                    query = "INSERT OR REPLACE INTO historical_prices (date, ticker, adj_close) VALUES (?, ?, ?)"
+                    cursor.execute(query, (date_str, ticker, close_val))
                 
                 self.con.commit()
             return True

@@ -10,7 +10,8 @@ class PairsFinder :
         self.con = sqlite3.connect(self.db_name)
 
     def charge_prices(self, ticker1, ticker2):
-        query = "SELECT date, adj_close FROM prices WHERE ticker = ? ORDER BY date"
+
+        query = "SELECT date, adj_close FROM historical_prices WHERE ticker = ? ORDER BY date"
 
         df1 = pd.read_sql_query(query, self.con, params=(ticker1,))
         df1 = df1.rename(columns={"adj_close": ticker1})
