@@ -59,38 +59,48 @@ with tab_backtest:
         st.info("Clique sur 'Calculer le backtest' dans la barre latérale pour lancer l'analyse.")
 
 # ==========================================
-# ONGLET 2 : TRADING TEMPS RÉEL (Fixé avec fuseau horaire)
+# ONGLET 2 : TRADING TEMPS RÉEL (Z-Score Glissant Synchronisé)
 # ==========================================
 with tab_live:
     st.header("Surveillance des flux en direct")
     
-    MEAN, STD = loader.get_historical_metrics(beta=BETA)
+    # 1. Récupération des 100 derniers points (intraday / live)
     recent_spreads = loader.get_recent_spreads(limit=100)
     all_orders = loader.get_all_orders()
     
     if recent_spreads:
-        dernier_point = recent_spreads[-1]
-        prix_goog = dernier_point[1]
-        prix_googl = dernier_point[2]
+        # 2. Mise en DataFrame immédiate pour utiliser la puissance de Pandas
+        df_chart = pd.DataFrame(recent_spreads, columns=["date", "GOOG", "GOOGL"])
+        
+        # 3. Calcul du spread et du Z-Score GLISSANT (Fenêtre de 20 comme le backtest)
+        df_chart["Spread"] = df_chart["GOOG"] - (BETA * df_chart["GOOGL"])
+        
+        rolling_mean = df_chart["Spread"].rolling(window=20).mean()
+        rolling_std = df_chart["Spread"].rolling(window=20).std()
+        df_chart["Z-Score"] = (df_chart["Spread"] - rolling_mean) / rolling_std
 
-        spread_actuel = prix_goog - (BETA * prix_googl)
-        z_score_actuel = (spread_actuel - MEAN) / STD
+        # 4. Extraction du tout dernier point pour les KPIs du haut
+        prix_goog = df_chart["GOOG"].iloc[-1]
+        prix_googl = df_chart["GOOGL"].iloc[-1]
+        z_score_actuel = df_chart["Z-Score"].iloc[-1]
 
         # Affichage des KPIs
         c1, c2, c3 = st.columns(3)
         c1.metric(label="Dernier prix GOOG", value=f"{prix_goog:.2f} $")
         c2.metric(label="Dernier prix GOOGL", value=f"{prix_googl:.2f} $")
-        c3.metric(label="Z-Score actuel", value=f"{z_score_actuel:.2f}")
         
-        # Graphique du spread avec ajustement de l'heure (+2h pour la France)
-        st.subheader("Graphique du spread (100 derniers points)")
-        df_chart = pd.DataFrame(recent_spreads, columns=["date", "GOOG", "GOOGL"])
+        # Sécurité : Si on n'a pas encore 20 points, le Z-Score glissant sera NaN
+        if pd.isna(z_score_actuel):
+            c3.metric(label="Z-Score actuel", value="Calcul en cours...", delta="Attente de 20 points")
+        else:
+            c3.metric(label="Z-Score actuel", value=f"{z_score_actuel:.2f}")
         
-        # Conversion de la date UTC en heure locale Paris
+        # 5. Conversion cosmétique des dates UTC en heure locale Paris pour le graphique
         df_chart["date"] = pd.to_datetime(df_chart["date"], format='mixed')
-        df_chart["date"] = df_chart["date"].dt.tz_localize('UTC').dt.tz_convert('Europe/Paris')
+        df_chart["date"] = df_chart["date"].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT').dt.tz_convert('Europe/Paris')
         
-        df_chart["Spread"] = df_chart["GOOG"] - (BETA * df_chart["GOOGL"])
+        # Graphique du spread
+        st.subheader("Graphique du spread (100 derniers points)")
         st.line_chart(df_chart.set_index("date")["Spread"])
         
         # Journal des ordres avec ajustement des dates
@@ -102,10 +112,8 @@ with tab_live:
                 "Exit GOOGL", "Beta", "PnL"
             ])
             
-            # Conversion fuseau horaire sécurisée
             for col in ["Date Entrée", "Date Sortie"]:
                 df_orders[col] = pd.to_datetime(df_orders[col], format='mixed')
-                # On ne convertit que si la série n'est pas entièrement vide
                 if df_orders[col].notna().any():
                     df_orders[col] = df_orders[col].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT').dt.tz_convert('Europe/Paris')
             
@@ -117,5 +125,5 @@ with tab_live:
         st.warning("En attente de réception des premières données du live_feeder...")
 
 # --- LE MOTEUR DE RAFRAÎCHISSEMENT GLOBAL ---
-time.sleep(1)
+time.sleep(10)
 st.rerun()

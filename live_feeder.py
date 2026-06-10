@@ -46,7 +46,6 @@ def on_open(ws):
 
 if __name__ == "__main__":
 
-    loader = DataLoader("finance_data.db")
     loader.reset_orders_table()
     
     websocket.enableTrace(False)

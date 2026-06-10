@@ -174,7 +174,6 @@ class DataLoader:
                 FROM prices g
                 JOIN prices gl ON g.date = gl.date
                 WHERE g.ticker = 'GOOG' AND gl.ticker = 'GOOGL'
-                AND g.date >= date('now', '-1 day') -- 🛡️ Sécurité : Uniquement les dernières 24h
                 ORDER BY g.date DESC
                 LIMIT ?
                 """
