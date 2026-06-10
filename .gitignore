@@ -11,7 +11,7 @@ env/
 *.pyc
 
 # Base de données locale (pour éviter de push tes données de test)
-*.db
+#*.db
 *.db-journal
 
 # Variables d'environnement privées (NE JAMAIS PUSH LA CLÉ FINNHUB)

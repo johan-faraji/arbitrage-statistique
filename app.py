@@ -25,28 +25,6 @@ tab_live, tab_backtest = st.tabs(["Trading temps réel", "Backtest historique"])
 with tab_backtest:
     st.header("Analyse rétrospective")
     
-    # ==========================================
-    # BARRE LATÉRALE : CONFIGURATION & INGESTION
-    # ==========================================
-    st.sidebar.header("⚙️ Configuration Globale")
-
-    # Section dédiée à la récolte de données
-    st.sidebar.subheader("Données historiques")
-    if st.sidebar.button("📥 Récolter l'historique (2021-2026)"):
-        with st.sidebar.spinner("Téléchargement des cours depuis Yahoo Finance..."):
-            # Téléchargement pour notre paire de tickers de référence
-            success = loader.download_historical_data(["GOOG", "GOOGL"], "2021-01-01", "2026-06-01")
-            
-            if success:
-                st.sidebar.success("🎉 Historique stocké avec succès dans 'prices' !")
-                time.sleep(1.5)
-                st.rerun()
-            else:
-                st.sidebar.error("❌ Échec de la récolte. Regarde les logs de Render.")
-
-    st.sidebar.markdown("---")
-    
-    st.sidebar.subheader("Analyses")
     if st.sidebar.button("Calculer le backtest"):
         with st.spinner("Calcul du backtest en cours..."):
             finder = PairsFinder(db_name)
