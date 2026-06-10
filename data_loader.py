@@ -41,13 +41,36 @@ class DataLoader:
         self.con.commit()
 
     def download_historical_data(self, tickers, start_date, end_date):
-        """Télécharge les données historiques."""
-        # TECHNIQUE DU LAZY LOADING : 
-        # On n'importe yfinance QUE si cette méthode précise est appelée.
+        """Télécharge les données historiques et les stocke dans la table prices."""
+        # Lazy Loading obligatoire pour éviter les crashs au démarrage de Docker
         import yfinance as yf
         
-        print(f"📥 Téléchargement historique pour {tickers}...")
-        # Laisse le reste de ton code existant pour le téléchargement historique ici...
+        try:
+            for ticker in tickers:
+                print(f"📥 Téléchargement historique pour {ticker}...")
+                data = yf.download(ticker, start=start_date, end=end_date)
+                
+                if data.empty:
+                    print(f"⚠️ Aucun cours trouvé pour {ticker}")
+                    continue
+                
+                cursor = self.con.cursor()
+                for timestamp, row in data.iterrows():
+                    # Format propre 'YYYY-MM-DD' (longueur 10)
+                    date_str = timestamp.strftime('%Y-%m-%d')
+                    
+                    # Sécurité : Conversion du float de Pandas (numpy) en float Python pur
+                    adj_close_val = float(row['Adj Close'])
+                    
+                    # Le INSERT OR REPLACE évite les doublons si tu cliques plusieurs fois sur le bouton
+                    query = "INSERT OR REPLACE INTO prices (date, ticker, adj_close) VALUES (?, ?, ?)"
+                    cursor.execute(query, (date_str, ticker, adj_close_val))
+                
+                self.con.commit()
+            return True
+        except Exception as e:
+            print(f"❌ Erreur lors du téléchargement historique : {e}")
+            return False
 
     def save_live_price(self, date_str, ticker, price):
         """Insère ou met à jour un prix reçu en temps réel dans la table prices."""
