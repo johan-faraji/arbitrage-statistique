@@ -48,7 +48,7 @@ with tab_backtest:
                 st.session_state["sharpe"] = sharpe
                 st.session_state["equity"] = equity
 
-    # 2. Si le backtest est en mémoire, on l'affiche (il ne disparaîtra plus !)
+    # 2. Si le backtest est en mémoire, on l'affiche
     if st.session_state.get("backtest_calculé", False):
         col1, col2, col3 = st.columns(3)
         col1.metric(label="Rendement total", value=f"{st.session_state['ret']:.2f} %")
@@ -71,17 +71,17 @@ with tab_live:
     all_orders = loader.get_all_orders()
     
     if recent_spreads:
-        # 2. Mise en DataFrame immédiate pour utiliser la puissance de Pandas
+        # 2. Mise en DataFrame
         df_chart = pd.DataFrame(recent_spreads, columns=["date", "GOOG", "GOOGL"])
         
-        # 3. Calcul du spread et du Z-Score GLISSANT (Fenêtre de 20 comme le backtest)
+        # 3. Calcul du spread et du Z-Score GLISSANT
         df_chart["Spread"] = df_chart["GOOG"] - (BETA * df_chart["GOOGL"])
         
         rolling_mean = df_chart["Spread"].rolling(window=20).mean()
         rolling_std = df_chart["Spread"].rolling(window=20).std()
         df_chart["Z-Score"] = (df_chart["Spread"] - rolling_mean) / rolling_std
 
-        # 4. Extraction du tout dernier point pour les KPIs du haut
+        # 4. Extraction du dernier point pour les KPIs
         prix_goog = df_chart["GOOG"].iloc[-1]
         prix_googl = df_chart["GOOGL"].iloc[-1]
         z_score_actuel = df_chart["Z-Score"].iloc[-1]
@@ -97,7 +97,7 @@ with tab_live:
         else:
             c3.metric(label="Z-Score actuel", value=f"{z_score_actuel:.2f}")
         
-        # 5. Conversion cosmétique des dates UTC en heure locale Paris pour le graphique
+        # 5. Conversion des dates UTC en heure locale Paris pour le graphique
         df_chart["date"] = pd.to_datetime(df_chart["date"], format='mixed')
         df_chart["date"] = df_chart["date"].dt.tz_localize('UTC', ambiguous='NaT', nonexistent='NaT').dt.tz_convert('Europe/Paris')
         
@@ -126,6 +126,5 @@ with tab_live:
     else:
         st.warning("En attente de réception des premières données du live_feeder...")
 
-# --- LE MOTEUR DE RAFRAÎCHISSEMENT GLOBAL ---
 time.sleep(10)
 st.rerun()
