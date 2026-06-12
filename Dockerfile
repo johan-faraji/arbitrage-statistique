@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # 2. Définition du répertoire de travail dans le conteneur
 WORKDIR /app
 
-# 3. Installation des dépendances système (SQLite3 nécessaire pour ton DataLoader)
+# 3. Installation des dépendances système (SQLite3 nécessaire pour le DataLoader)
 RUN apt-get update && apt-get install -y \
     build-essential \
     sqlite3 \
