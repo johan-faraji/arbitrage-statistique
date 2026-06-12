@@ -2,6 +2,18 @@
 
 Plateforme de trading algorithmique et de backtesting dédiée à l'arbitrage statistique (Mean Reversion) sur la paire de trackers Alphabet (**GOOG / GOOGL**). L'application est containerisée avec Docker et déployée de manière autonome sur Render.
 
+<p align="center">
+  <img src="./images/backtest-UI" alt="Interface du backtesting" width="600">
+</p>
+
+<p align="center">
+  <img src="./images/orders" alt="Ordres simulés sur le marché en fonction du Z-score calculé" width="600">
+</p>
+
+<p align="center">
+  <img src="./images/main-stats" alt="Statistiques en temps réel" width="600">
+</p>
+
 ---
 
 ## Performances historiques de la stratégie (2021 - 2026)
