@@ -94,11 +94,10 @@ class Backtester:
         # 4. Évolution du capital dans le temps
         equity_curve = (1 + global_returns.fillna(0)).cumprod() * self.initial_capital
         
-        # --- NOUVEAU : SPRINT 5 (METRIQUES AVANCEES) ---
+        # 5. Métriques avancées
         final_capital = equity_curve.iloc[-1]
         total_return = ((final_capital - self.initial_capital) / self.initial_capital) * 100
         
-        # Appels de tes nouvelles méthodes
         max_drawdown = self.calculate_max_drawdown(equity_curve)
         sharpe_ratio = self.calculate_sharpe_ratio(global_returns)
         
