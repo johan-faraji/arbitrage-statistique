@@ -5,7 +5,7 @@ import pandas as pd
 loader = DataLoader("finance_data.db")
 
 def calculate_historical_metrics():
-    beta = 1.00  # Ajustable selon ton modèle OLS du Sprint 5
+    beta = 1.00  # Car GOOG et GOOGL représentent la même entreprise
     mean, std = loader.get_historical_metrics(beta=beta)
     
     print(f"   -> Moyenne historique (µ) : {mean:.4f}")
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     BETA = 1.00
     WINDOW = 20 # Fenêtre glissante identique au backtest et à app.py
     
-    print("🛡️ Surveillance du Z-Score glissant activée. En attente de variations...")
+    print("Surveillance du Z-Score glissant activée. En attente de variations...")
     print("-" * 60)
     
     last_seen_date = None
@@ -76,7 +76,6 @@ if __name__ == "__main__":
 
                         entry_spread = entry_goog - (BETA * entry_googl)
 
-                        # 🎯 CONDITION DE SORTIE (Désormais parfaitement synchrone avec app.py)
                         if (signal_type == "BUY_SPREAD" and z_score >= 0) or (signal_type == "SELL_SPREAD" and z_score <= 0):
                             print(f"🎯 SIGNAL EXIT: RETOUR À LA MOYENNE DÉTECTÉ (Z-Score: {z_score:+.2f})")
                             
@@ -91,4 +90,4 @@ if __name__ == "__main__":
             time.sleep(1)
             
     except KeyboardInterrupt:
-        print("\n🛑 Arrêt de la surveillance.")
+        print("\nArrêt de la surveillance.")
