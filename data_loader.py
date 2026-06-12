@@ -1,5 +1,4 @@
 import sqlite3
-# !!! RETIRE L'IMPORT DE YFINANCE D'ICI !!!
 
 class DataLoader:
     def __init__(self, db_path):
@@ -50,7 +49,7 @@ class DataLoader:
         self.con.commit()
 
     def download_historical_data(self, tickers, start_date, end_date):
-        """Télécharge les données historiques et les stocke UNIQUEMENT dans historical_prices."""
+        """Télécharge les données historiques et les stocke dans historical_prices."""
         import yfinance as yf
         import requests
         
@@ -61,12 +60,12 @@ class DataLoader:
             })
             
             for ticker in tickers:
-                print(f"📥 Téléchargement historique pour {ticker}...")
+                print(f"Téléchargement historique pour {ticker}...")
                 ticker_obj = yf.Ticker(ticker, session=session)
                 data = ticker_obj.history(start=start_date, end=end_date)
                 
                 if data.empty:
-                    print(f"⚠️ Aucun cours trouvé pour {ticker}")
+                    print(f"Aucun cours trouvé pour {ticker}")
                     continue
                 
                 cursor = self.con.cursor()
@@ -74,14 +73,14 @@ class DataLoader:
                     date_str = timestamp.strftime('%Y-%m-%d')
                     close_val = float(row['Close'])
                     
-                    # 🎯 ON INSÈRE DANS HISTORICAL_PRICES
+                    # INSERTION DANS HISTORICAL_PRICES
                     query = "INSERT OR REPLACE INTO historical_prices (date, ticker, adj_close) VALUES (?, ?, ?)"
                     cursor.execute(query, (date_str, ticker, close_val))
                 
                 self.con.commit()
             return True
         except Exception as e:
-            print(f"❌ Erreur lors du téléchargement historique : {e}")
+            print(f"Erreur lors du téléchargement historique : {e}")
             return False
 
     def save_live_price(self, date_str, ticker, price):
@@ -134,7 +133,7 @@ class DataLoader:
             rows = cursor.fetchall()
             
             if not rows:
-                print("⚠️ Aucune donnée historique trouvée pour calculer les métriques.")
+                print("Aucune donnée historique trouvée pour calculer les métriques.")
                 return 0.0, 1.0
             
             # Extraction des spreads
@@ -148,11 +147,11 @@ class DataLoader:
             variance = sum((x - mean) ** 2 for x in spreads) / (n - 1) if n > 1 else 1.0
             std = variance ** 0.5
             
-            print(f"📊 Métriques historiques calculées sur {n} jours de specs.")
+            print(f"Métriques historiques calculées sur {n} jours de specs.")
             return mean, std
             
         except Exception as e:
-            print(f"⚠️ Erreur lors du calcul statistique SQL : {e}")
+            print(f"Erreur lors du calcul statistique SQL : {e}")
             return 0.0, 1.0
         
     def has_open_position(self):
@@ -177,7 +176,7 @@ class DataLoader:
             cursor.execute(query, (date_entry, signal_type, 'OPEN', entry_goog, entry_googl, beta))
             self.con.commit()
         except Exception as e:
-            print(f"⚠️ Erreur lors de l'insertion SQLite : {e}")
+            print(f"Erreur lors de l'insertion SQLite : {e}")
         
 
     def close_trade(self, order_id, date_exit, exit_goog, exit_googl, pnl):
@@ -198,7 +197,7 @@ class DataLoader:
             cursor.execute(query, (date_exit, exit_goog, exit_googl, pnl, order_id))
             self.con.commit()
         except Exception as e:
-            print(f"⚠️ Erreur lors de la MAJ de la table SQLite : {e}")
+            print(f"Erreur lors de la MAJ de la table SQLite : {e}")
 
     def get_recent_spreads(self, limit=100):
         query = """
@@ -231,6 +230,6 @@ class DataLoader:
             cursor = self.con.cursor()
             cursor.execute(query)
             self.con.commit()
-            print("🧼 [DATABASE] Table des ordres vidée avec succès pour la nouvelle session.")
+            print("Table des ordres vidée avec succès pour la nouvelle session.")
         except Exception as e:
-            print(f"⚠️ Erreur lors du nettoyage de la table orders : {e}")
+            print(f"Erreur lors du nettoyage de la table orders : {e}")
