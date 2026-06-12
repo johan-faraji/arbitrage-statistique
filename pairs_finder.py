@@ -50,7 +50,7 @@ class PairsFinder :
                 
                 # 4. Si la p-value est bonne, on garde la paire
                 if p_value < 0.05:
-                    print(f"🎉 Paire trouvée ! {ticker1} et {ticker2} (p-value: {p_value:.4f})")
+                    print(f"Paire trouvée ! {ticker1} et {ticker2} (p-value: {p_value:.4f})")
                     pairs_valides.append((ticker1, ticker2, p_value))
                     
             except Exception as e:
