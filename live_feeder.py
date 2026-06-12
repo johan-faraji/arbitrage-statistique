@@ -25,22 +25,22 @@ def on_message(ws, message):
             price = trade["p"]
             timestamp = trade["t"]
             
-            # 🎯 CORRECTION : On s'arrête aux secondes (%S), on vire les millisecondes
+            # On s'arrête aux secondes (%S), on vire les millisecondes
             date_lisible = pd.to_datetime(timestamp, unit='ms').strftime('%Y-%m-%d %H:%M:%S')
             
             print(f"⚡ Live Trade | {ticker} : {price} $ | {date_lisible}")
             
-            # Sauvegarde en base de données (SQLite gérera l'écrasement ou l'insertion)
+            # Sauvegarde en base de données
             loader.save_live_price(date_lisible, ticker, price)
 
 def on_error(ws, error):
-    print(f"⚠️ Erreur WebSocket : {error}")
+    print(f"Erreur WebSocket : {error}")
 
 def on_close(ws, close_status_code, close_msg):
-    print("🔌 Connexion WebSocket fermée.")
+    print("Connexion WebSocket fermée.")
 
 def on_open(ws):
-    print("🚀 Connexion établie ! Abonnement aux flux GOOG et GOOGL...")
+    print("Connexion établie ! Abonnement aux flux GOOG et GOOGL...")
     ws.send(f'{{"type":"subscribe","symbol":"GOOG"}}')
     ws.send(f'{{"type":"subscribe","symbol":"GOOGL"}}')
 
