@@ -33,13 +33,45 @@ Pour garantir une étanchéité totale entre l'analyse historique et l'exécutio
 
 ---
 
-## Installation et Lancement en Local
+## Installation et Lancement
 
-### 1. Prérequis
-* Python 3.11+
-* Docker (optionnel, pour tester l'environnement de production)
+### Prérequis
+* **Docker** et **Docker Compose** installés sur votre machine.
+* Une clé API **Finnhub** (gratuite).
 
-### 2. Installation des dépendances
-```bash
+### 1. Configuration de l'environnement
+À la racine du projet, créez un fichier `.env` et ajoutez-y votre clé API :
+
+```
+env
+FINNHUB_API_KEY=votre_cle_api_ici
+```
+
+### 2. Déploiement avec Docker (Recommandé)
+Le projet est entièrement conteneurisé pour garantir un lancement déterministe sans conflit de dépendances.
+
+```
+# Construire et lancer l'ensemble des services (Database, Feeder, Monitor, Dashboard)
+docker compose up --build
+```
+
+Une fois le déploiement terminé :
+- Dashboard Streamlit : Accessible sur http://localhost:8501
+- Flux Live : Le conteneur se connecte automatiquement aux WebSockets pour alimenter la base de données.
+
+### 3. Lancement en local (Alternative)
+Si vous préférez lancer les scripts manuellement sans Docker :
+
+```
+# 1. Installer les dépendances
 pip install -r requirements.txt
----
+
+# 2. Lancer le flux de données temps réel (WebSocket)
+python live_feeder.py
+
+# 3. Lancer le moteur d'exécution (Calcul du Z-Score et émission d'ordres)
+python monitor_statarb.py
+
+# 4. Lancer l'interface graphique
+streamlit run App.py
+```
