@@ -21,17 +21,16 @@ def seed_historical_database():
     """)
     con.commit()
     
-    print("🚀 Début de la récolte locale de l'historique...")
+    print("Début de la récolte locale de l'historique...")
     
     try:
         for ticker in TICKERS:
-            print(f"📥 Téléchargement des données pour {ticker}...")
+            print(f"Téléchargement des données pour {ticker}...")
             
-            # Action corrective : group_by="ticker" aide à garder une structure prévisible
             data = yf.download(ticker, start=START_DATE, end=END_DATE, group_by="ticker")
             
             if data.empty:
-                print(f"⚠️ Aucun cours trouvé pour {ticker}")
+                print(f"Aucun cours trouvé pour {ticker}")
                 continue
             
             # Si yfinance a créé un MultiIndex (ex: [('GOOG', 'Close'), ...]), on nettoie
@@ -55,12 +54,12 @@ def seed_historical_database():
                 count += 1
                 
             con.commit()
-            print(f"✅ {count} lignes insérées avec succès pour {ticker} dans 'historical_prices'.")
+            print(f"{count} lignes insérées avec succès pour {ticker} dans 'historical_prices'.")
             
-        print("\n🎉 Base de données locale pré-remplie avec succès ! Le fichier 'finance_data.db' est prêt.")
+        print("\nBase de données locale pré-remplie avec succès ! Le fichier 'finance_data.db' est prêt.")
         
     except Exception as e:
-        print(f"❌ Erreur lors de la récolte locale : {e}")
+        print(f"Erreur lors de la récolte locale : {e}")
     finally:
         con.close()
 
